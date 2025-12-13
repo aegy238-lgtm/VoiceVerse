@@ -1,0 +1,7 @@
+{
+  "name": "VoiceVerse",
+  "description": "A high-fidelity social audio platform with an immersive gifting economy and AI-powered interaction.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
