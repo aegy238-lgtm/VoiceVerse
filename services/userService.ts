@@ -1,73 +1,48 @@
-import { db } from "../firebaseConfig";
-import { doc, getDoc, setDoc, updateDoc, onSnapshot, increment } from "firebase/firestore";
-import { User, UserRole, UserStatus } from "../types";
-import { MOCK_USER } from "../constants";
 
-const COLLECTION_NAME = "users";
+import { User } from "../types";
+import { MOCK_USER, MOCK_ALL_USERS } from "../constants";
 
-// Initialize a user in Firestore if they don't exist
+// --- Mock User Service (No Server) ---
+
+// Simulating a database in memory for the session
+let localUser: User = { ...MOCK_USER };
+
 export const initializeUserInDB = async (userId: string): Promise<User> => {
-  const userRef = doc(db, COLLECTION_NAME, userId);
-  const userSnap = await getDoc(userRef);
-
-  if (userSnap.exists()) {
-    return userSnap.data() as User;
-  } else {
-    // Create new user based on MOCK_USER but with the specific ID
-    const newUser: User = {
-      ...MOCK_USER,
-      id: userId,
-      // Ensure numeric values are initialized
-      totalSpent: 0,
-      friendsCount: 0,
-      fansCount: 0,
-      followingCount: 0,
-      countryCode: 'EG', // Default
-    };
-    
-    // We add a separate field for 'walletBalance' in DB to manage coins easily, 
-    // although in the UI we pass it separately sometimes.
-    await setDoc(userRef, {
-        ...newUser,
-        walletBalance: 2500 // Starting balance
-    });
-    
-    return newUser;
-  }
+  return localUser;
 };
 
-// Listen to user updates (Real-time wallet and profile changes)
 export const subscribeToUser = (userId: string, callback: (data: any) => void) => {
-    return onSnapshot(doc(db, COLLECTION_NAME, userId), (doc) => {
-        if (doc.exists()) {
-            callback(doc.data());
-        }
-    });
+  // Call immediately with current local data
+  callback(localUser);
+  
+  // Return dummy unsubscribe
+  return () => {};
 };
 
-// Update Profile Info
+export const subscribeToLeaderboard = (callback: (users: User[]) => void) => {
+  // Return the mock list from constants
+  callback(MOCK_ALL_USERS);
+  return () => {};
+};
+
 export const updateUserProfileDB = async (userId: string, name: string, avatar: string) => {
-    const userRef = doc(db, COLLECTION_NAME, userId);
-    await updateDoc(userRef, {
-        name,
-        avatar
-    });
+  localUser = { ...localUser, name, avatar };
+  // In a real mock, we might want to trigger the listener, 
+  // but for simplicity we rely on local state updates in UI or refreshes
 };
 
-// Add Coins (Recharge)
 export const addCoinsDB = async (userId: string, amount: number) => {
-    const userRef = doc(db, COLLECTION_NAME, userId);
-    await updateDoc(userRef, {
-        walletBalance: increment(amount)
-    });
+  const current = localUser.walletBalance || 0;
+  localUser = { ...localUser, walletBalance: current + amount };
 };
 
-// Deduct Coins (Purchase/Gift)
 export const deductCoinsDB = async (userId: string, amount: number) => {
-    const userRef = doc(db, COLLECTION_NAME, userId);
-    // In a real app, you'd use a transaction to ensure balance >= amount
-    await updateDoc(userRef, {
-        walletBalance: increment(-amount),
-        totalSpent: increment(amount) // Increase wealth level progress
-    });
+  const current = localUser.walletBalance || 0;
+  if (current >= amount) {
+    localUser = { 
+        ...localUser, 
+        walletBalance: current - amount,
+        totalSpent: (localUser.totalSpent || 0) + amount 
+    };
+  }
 };

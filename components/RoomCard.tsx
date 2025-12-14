@@ -17,11 +17,13 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick }) => {
         onClick={onClick}
         className="relative aspect-[4/5] rounded-2xl overflow-hidden cursor-pointer group shadow-lg border border-white/5"
     >
-        {/* Background Image */}
+        {/* Background Image - Lazy Loaded for Speed */}
         <img 
             src={room.backgroundImage || 'https://via.placeholder.com/300'} 
             alt={room.title} 
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 bg-slate-900"
         />
         
         {/* Dark Gradient Overlay */}
@@ -47,6 +49,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick }) => {
             <img 
                 src={`https://flagcdn.com/w40/${countryCode}.png`} 
                 alt="Country"
+                loading="lazy"
                 className="w-5 h-3.5 rounded-[2px] shadow-sm"
             />
         </div>
@@ -83,7 +86,11 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick }) => {
                         {room.host.name.split(' ')[0]}
                     </span>
                     <div className="w-6 h-6 rounded-full p-[1px] bg-gradient-to-tr from-yellow-400 to-yellow-600">
-                        <img src={room.host.avatar} className="w-full h-full rounded-full object-cover" />
+                        <img 
+                            src={room.host.avatar} 
+                            loading="lazy"
+                            className="w-full h-full rounded-full object-cover bg-slate-800" 
+                        />
                     </div>
                 </div>
 
